@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nestchat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d nestchat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/nestchat?schema=public
+      JWT_SECRET: supersecretkey
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./back:/app
+      - /app/node_modules
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    depends_on:
+      - back
+
+volumes:
+  postgres_data:

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,8 +8,64 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  color     String   @default("#3b82f6") // Default blue
   createdAt DateTime @default(now())
+
+  messages    Message[]
+  roomsOwned  Room[]
+  memberships RoomMember[]
+  reactions   Reaction[]
+}
+
+model Room {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+
+  messages Message[]
+  members  RoomMember[]
+}
+
+model RoomMember {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  roomId           String
+  room             Room     @relation(fields: [roomId], references: [id])
+  joinedAt         DateTime @default(now())
+  hasHistoryAccess Boolean  @default(true)
+
+  @@unique([userId, roomId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id])
+
+  reactions Reaction[]
+}
+
+model Reaction {
+  id    String @id @default(uuid())
+  emoji String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id])
+
+  @@unique([userId, messageId, emoji])
 }
