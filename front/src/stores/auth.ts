@@ -4,10 +4,16 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
-    token: localStorage.getItem('token') || null,
-  }),
+  state: () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    return {
+      user: JSON.parse(localStorage.getItem('user') || 'null'),
+      token: token || null,
+    };
+  },
   getters: {
     isAuthenticated: (state) => !!state.token,
   },
@@ -33,15 +39,15 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     async updateProfile(username: string, color: string) {
-       try {
-         const res = await axios.patch(`${API_URL}/users/${this.user.id}`, { username, color });
-         this.user = { ...this.user, ...res.data };
-         localStorage.setItem('user', JSON.stringify(this.user));
-         return true;
-       } catch (e) {
-         console.error(e);
-         return false;
-       }
+      try {
+        const res = await axios.patch(`${API_URL}/users/${this.user.id}`, { username, color });
+        this.user = { ...this.user, ...res.data };
+        localStorage.setItem('user', JSON.stringify(this.user));
+        return true;
+      } catch (e) {
+        console.error(e);
+        return false;
+      }
     },
     setAuth(data: any) {
       this.token = data.access_token;

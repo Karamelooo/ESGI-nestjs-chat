@@ -24,7 +24,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private chatService: ChatService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async handleConnection(client: Socket) {
     try {
@@ -35,7 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
       const payload = this.jwtService.verify(token);
       client.data.user = payload;
-      
+
       const rooms = await this.chatService.getUserRooms(payload.sub);
       client.emit('roomsList', rooms);
     } catch (e) {
@@ -52,22 +52,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() payload: { roomId: string },
   ) {
     const user = client.data.user;
-    if(!user) return;
-    
-    // Auto-join logic if strictly needed, or just subscribe socket room
-    await this.chatService.joinRoom(payload.roomId, user.sub); 
-    
+    if (!user) return;
+
+    await this.chatService.joinRoom(payload.roomId, user.sub);
+
     client.join(payload.roomId);
-    
-    // Send history
+
     const messages = await this.chatService.getRoomMessages(payload.roomId, user.sub);
     client.emit('history', { roomId: payload.roomId, messages });
 
-    // Refresh rooms list for the user (important for first join/general auto-join)
+
     const rooms = await this.chatService.getUserRooms(user.sub);
     client.emit('roomsList', rooms);
   }
-  
+
   @SubscribeMessage('createRoom')
   async handleCreateRoom(
     @ConnectedSocket() client: Socket,
@@ -75,11 +73,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const user = client.data.user;
     const room = await this.chatService.createRoom(payload.name, user.sub, payload.memberIds, payload.historyAccess);
-    // Refresh rooms for creator or just push the new room
-    // The client handles roomCreated by joining it, we should also maybe update the list
     client.emit('roomCreated', room);
   }
-  
+
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(
     @ConnectedSocket() client: Socket,
@@ -103,32 +99,32 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { roomId: string; isTyping: boolean },
   ) {
-     const user = client.data.user;
-     client.broadcast.to(payload.roomId).emit('userTyping', { 
-         username: user.username, 
-         isTyping: payload.isTyping,
-         userId: user.sub,
-         roomId: payload.roomId
-     });
+    const user = client.data.user;
+    client.broadcast.to(payload.roomId).emit('userTyping', {
+      username: user.username,
+      isTyping: payload.isTyping,
+      userId: user.sub,
+      roomId: payload.roomId
+    });
   }
-  
+
   @SubscribeMessage('addReaction')
   async handleReaction(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { messageId: string; emoji: string; roomId: string },
   ) {
-     const user = client.data.user;
-     const result = await this.chatService.addReaction(user.sub, payload.messageId, payload.emoji);
-     if (result.action === 'added') {
-        this.server.to(payload.roomId).emit('reactionAdded', result.reaction);
-     } else {
-        this.server.to(payload.roomId).emit('reactionRemoved', { 
-            messageId: result.messageId, 
-            reactionId: result.reactionId,
-            userId: result.userId,
-            emoji: result.emoji
-        });
-     }
+    const user = client.data.user;
+    const result = await this.chatService.addReaction(user.sub, payload.messageId, payload.emoji);
+    if (result.action === 'added') {
+      this.server.to(payload.roomId).emit('reactionAdded', result.reaction);
+    } else {
+      this.server.to(payload.roomId).emit('reactionRemoved', {
+        messageId: result.messageId,
+        reactionId: result.reactionId,
+        userId: result.userId,
+        emoji: result.emoji
+      });
+    }
   }
   @SubscribeMessage('addMember')
   async handleAddMember(
@@ -136,11 +132,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() payload: { roomId: string; username: string; hasHistoryAccess: boolean },
   ) {
     try {
-        const result = await this.chatService.addMember(payload.roomId, payload.username, payload.hasHistoryAccess);
-        this.server.emit('addedToRoom', { room: result.member.room, userId: result.user.id });
-        client.emit('memberAdded', { success: true });
+      const result = await this.chatService.addMember(payload.roomId, payload.username, payload.hasHistoryAccess);
+      this.server.emit('addedToRoom', { room: result.member.room, userId: result.user.id });
+      client.emit('memberAdded', { success: true });
     } catch (e) {
-        client.emit('error', { message: e.message });
+      client.emit('error', { message: e.message });
     }
   }
 
@@ -149,22 +145,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { roomId: string },
   ) {
-      const user = client.data.user;
-      try {
-          await this.chatService.deleteRoom(payload.roomId, user.sub);
-          this.server.to(payload.roomId).emit('roomDeleted', { roomId: payload.roomId });
-          this.server.in(payload.roomId).socketsLeave(payload.roomId);
-      } catch (e) {
-          client.emit('error', { message: e.message });
-      }
+    const user = client.data.user;
+    try {
+      await this.chatService.deleteRoom(payload.roomId, user.sub);
+      this.server.to(payload.roomId).emit('roomDeleted', { roomId: payload.roomId });
+      this.server.in(payload.roomId).socketsLeave(payload.roomId);
+    } catch (e) {
+      client.emit('error', { message: e.message });
+    }
   }
 
   @SubscribeMessage('profileUpdated')
   async handleProfileUpdate(
     @ConnectedSocket() client: Socket,
   ) {
-      const user = client.data.user;
-      // Broadcast event to allow clients to handle profile refresh (e.g. refetch or update UI)
-      this.server.emit('userUpdated', { userId: user.sub });
+    const user = client.data.user;
+    this.server.emit('userUpdated', { userId: user.sub });
   }
 }

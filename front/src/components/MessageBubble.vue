@@ -18,7 +18,7 @@ const handleMouseEnter = () => {
 
 const reactions = computed(() => {
     if(!props.message.reactions) return [];
-    // Group reactions by emoji
+
     const groups: Record<string, number> = {};
     props.message.reactions.forEach((r: any) => {
         const count = groups[r.emoji] || 0;
@@ -55,7 +55,7 @@ const addReaction = (emoji: string) => {
          <div v-if="!isMe" class="text-xs font-bold mb-1 opacity-80" :style="{ color: message.author.color }">{{ message.author.username }}</div>
          <div class="leading-relaxed z-5">{{ message.content }}</div>
          
-         <!-- Reaction Picker -->
+
          <div v-if="showReactions" class="absolute -bottom-10 bg-popover/90 backdrop-blur-xl rounded-full px-3 py-1.5 flex gap-2 shadow-xl border border-border animate-fade-in z-10 transition-all scale-100 origin-bottom">
             <button @click="addReaction('👍')" class="hover:scale-125 transition active:scale-95 text-xl">👍</button>
             <button @click="addReaction('❤️')" class="hover:scale-125 transition active:scale-95 text-xl">❤️</button>
@@ -65,7 +65,7 @@ const addReaction = (emoji: string) => {
        </div>
     </div>
     
-    <!-- Reactions Display -->
+
     <div v-if="reactions.length > 0" class="flex gap-1.5 mt-1 px-10 flex-wrap">
         <button 
            v-for="r in reactions" 

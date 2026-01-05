@@ -20,15 +20,12 @@ import {
 import { useDark, useToggle } from '@vueuse/core';
 import { LogOut, Plus, Settings, UserPlus, Send, Moon, Sun, Trash2 } from 'lucide-vue-next';
 
-// ... (existing code)
+
 
 const confirmDelete = (roomId: string, roomName: string) => {
-    console.log('Confirm Delete Triggered:', roomId, roomName);
     if (confirm(`Are you sure you want to delete room "${roomName}"? This cannot be undone.`)) {
-        console.log('User confirmed deletion');
         chatStore.deleteRoom(roomId);
     } else {
-        console.log('User cancelled deletion');
     }
 };
 
@@ -67,11 +64,11 @@ const editColor = ref(authStore.user?.color || '#3b82f6');
 
 onMounted(() => {
   chatStore.connect();
-  chatStore.joinRoom('general'); // Default room
+  chatStore.joinRoom('general');
 });
 
 watch(() => chatStore.messages.length, () => {
-    // Hacky scroll for now until ScrollArea ref access is cleanly implemented
+
     setTimeout(() => {
         const viewport = document.querySelector('[data-radix-scroll-area-viewport]');
         if(viewport) viewport.scrollTop = viewport.scrollHeight;
@@ -134,7 +131,7 @@ const logout = () => {
 
 <template>
   <div class="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
-    <!-- Sidebar -->
+
     <aside class="w-72 border-r bg-card/30 backdrop-blur-xl flex flex-col z-20 shadow-xl">
       <div class="p-6 border-b flex justify-between items-center bg-card/50">
         <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">NestChat</h1>
@@ -150,7 +147,7 @@ const logout = () => {
               v-for="room in chatStore.rooms"
               :key="room.id"
               variant="ghost"
-              @click="console.log('Room check:', { roomName: room.name, ownerId: room.ownerId, myId: authStore.user?.id }); chatStore.joinRoom(room.id)"
+              @click="chatStore.joinRoom(room.id)"
               class="w-full justify-start font-normal group relative"
               :class="{'bg-primary/10 text-primary font-medium': chatStore.currentRoom === room.id}"
             >
@@ -194,7 +191,7 @@ const logout = () => {
       </div>
     </aside>
 
-    <!-- Main Chat Area -->
+
     <main class="flex-1 flex flex-col relative z-10 bg-background/50 backdrop-blur-3xl">
       <div class="h-16 border-b flex items-center px-6 justify-between bg-card/30 backdrop-blur-md shadow-sm z-10">
          <div class="flex items-center gap-4">
@@ -242,7 +239,7 @@ const logout = () => {
       </div>
     </main>
 
-    <!-- Create Room Modal -->
+
     <Dialog v-model:open="showCreateRoom">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
@@ -270,7 +267,7 @@ const logout = () => {
       </DialogContent>
     </Dialog>
     
-    <!-- Add Member Modal -->
+
     <Dialog v-model:open="showAddMember">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
@@ -298,7 +295,7 @@ const logout = () => {
       </DialogContent>
     </Dialog>
     
-    <!-- Settings Modal -->
+
     <Dialog v-model:open="showSettings">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>

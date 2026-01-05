@@ -43,7 +43,7 @@ const handleLogin = async () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
-    <!-- Theme Toggle -->
+
     <div class="absolute top-4 right-4 z-50">
       <Button variant="ghost" size="icon" @click="toggleDark()">
         <Sun v-if="isDark" class="h-5 w-5" />

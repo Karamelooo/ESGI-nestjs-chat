@@ -5,15 +5,15 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('login')
   async login(@Body() body: any) {
-      const user = await this.authService.validateUser(body.username, body.password);
-      if (!user) {
-          throw new Error('Invalid credentials');
-      }
-      return this.authService.login(user); // returns { access_token, user }
+    const user = await this.authService.validateUser(body.username, body.password);
+    if (!user) {
+      throw new Error('Invalid credentials');
+    }
+    return this.authService.login(user);
   }
 
   @Post('register')
